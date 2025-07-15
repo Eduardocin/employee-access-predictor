@@ -47,47 +47,140 @@ Desenvolver um modelo de classificação binária que preveja automaticamente de
 ## 🔍 Principais Descobertas da Análise Exploratória
 
 ### 📈 Distribuição da Variável Target
-- **Balanceamento**: Dataset relativamente balanceado
-- **Padrão**: Distribuição que permite modelagem eficaz
-- **Insights**: Taxa de aprovação varia significativamente por contexto organizacional
+
+A análise da variável target (`ACTION`) revelou um **desbalanceamento crítico** que representa um dos principais desafios do projeto:
+
+- **Classe 1 (Acesso Permitido)**: 30.872 registros (**94.21%**)
+- **Classe 0 (Acesso Negado)**: 1.897 registros (**5.79%**)
+- **Total**: 32.769 registros
+- **Razão de balanceamento**: 0.061 (classe minoritária/majoritária)
+- **Diferença percentual**: 88.42% entre as classes
+- **Classificação**: Dataset **extremamente desbalanceado**
+
+- **🚨 Implicações Críticas**
+1. **Baseline ingênuo**: Sempre predizer "Acesso Permitido" = 94.21% de accuracy
+2. **Risco de bias**: Modelo pode tender a sempre aprovar acessos
+3. **Métricas enganosas**: Accuracy não é adequada para avaliação
+4. **Classe minoritária crítica**: Detectar negações é fundamental para segurança
+
+-  **🎯 Estratégias Necessárias**
+1. **Métricas apropriadas**: F1-score, Precision/Recall, AUC-PR
+2. **Técnicas de balanceamento**: SMOTE, undersampling, ou ensemble methods
+3. **Validação estratificada**: Manter proporção 94.21%/5.79% em todos os folds
+4. **Foco na classe minoritária**: Otimizar recall para detectar negações
 
 ### 📊 Cardinalidade das Variáveis
 
 #### 🔴 Alta Cardinalidade (>1000 categorias)
-- Variáveis que requerem técnicas especiais de encoding
-- Potencial para overfitting sem tratamento adequado
+- **RESOURCE**: 7.518 categorias únicas (93.2% raras, afeta 45.17% dos dados)
+- **MGR_ID**: 4.243 categorias únicas (74.9% raras, afeta 33.30% dos dados)
+- **ROLE_FAMILY_DESC**: 2.358 categorias únicas (80.1% raras, afeta 17.67% dos dados)
+
+*Variáveis que requerem técnicas especiais de encoding e tratamento de esparsidade*
 
 #### 🟡 Média Cardinalidade (100-1000 categorias)
-- Variáveis com boa granularidade para análise
-- Balanceamento entre especificidade e generalização
+- **ROLE_DEPTNAME**: 449 categorias únicas (26.7% raras, afeta 1.46% dos dados)
+- **ROLE_TITLE**: 343 categorias únicas (37.6% raras, afeta 1.56% dos dados)
+- **ROLE_CODE**: 343 categorias únicas (37.6% raras, afeta 1.56% dos dados)
+
+*Variáveis com boa granularidade, necessitam tratamento moderado*
 
 #### 🟢 Baixa Cardinalidade (<100 categorias)
-- Variáveis mais estáveis para modelagem
-- Menor risco de overfitting
+- **ROLE_ROLLUP_1**: 128 categorias únicas (18.0% raras, afeta 0.23% dos dados)
+- **ROLE_ROLLUP_2**: 177 categorias únicas (24.3% raras, afeta 0.48% dos dados)
+- **ROLE_FAMILY**: 67 categorias únicas (25.4% raras, afeta 0.23% dos dados)
+
+*Variáveis mais estáveis, ideais para modelagem direta*
 
 ### 🎯 Análise Bivariada - Insights Organizacionais
 
-#### 📋 Variáveis Hierárquicas
-- **ROLE_ROLLUP_1 vs ROLE_ROLLUP_2**: Padrões claros de aprovação baseados na hierarquia
-- **Combinações Críticas**: Certas combinações têm taxas de aprovação muito baixas
-- **Combinações Privilegiadas**: Outras combinações têm aprovação quase garantida
+A análise bivariada revelou padrões importantes na relação entre as variáveis preditoras e a variável target (`ACTION`), fornecendo insights críticos sobre os fatores que influenciam as decisões de acesso.
 
-#### 🏢 Análise Departamental
-- **Departamentos Restritivos**: Alguns departamentos têm políticas de acesso mais rigorosas
-- **Departamentos Liberais**: Outros têm maior flexibilidade de acesso
-- **Padrões de Recursos**: Diferentes departamentos acessam recursos distintos
+#### 📊 Correlação Feature x Target
+
+**Análise de Taxa de Aprovação por Variável:**
+
+##### 🔴 **Variáveis com Alta Variabilidade na Taxa de Aprovação:**
+- **ROLE_ROLLUP_1**: Taxa de aprovação varia de 85% a 99% entre diferentes níveis hierárquicos
+- **ROLE_ROLLUP_2**: Variação significativa (80% a 99%) indicando forte relação com decisões de acesso
+- **ROLE_DEPTNAME**: Departamentos mostram políticas distintas (75% a 99% de aprovação)
+- **ROLE_FAMILY**: Diferentes famílias de função têm critérios de acesso específicos
+
+##### 🟡 **Variáveis com Variabilidade Moderada:**
+- **ROLE_TITLE**: Títulos específicos mostram padrões de aprovação distintos
+- **ROLE_CODE**: Códigos de função refletem políticas organizacionais
+- **ROLE_FAMILY_DESC**: Descrições detalhadas revelam nuances nas decisões
+
+##### 🟢 **Variáveis com Alta Granularidade:**
+- **RESOURCE**: Recursos específicos têm taxas de aprovação muito variadas (0% a 100%)
+- **MGR_ID**: Gerentes individuais mostram padrões distintos de aprovação
+
+#### 🏢 **Padrões Organizacionais Identificados:**
+
+##### **Hierarquia de Acesso:**
+- **Níveis superiores** (ROLE_ROLLUP_1): Maior liberdade de acesso (95%+ aprovação)
+- **Níveis intermediários**: Aprovação moderada (85-95%)
+- **Níveis operacionais**: Maior restrição (80-90% aprovação)
+
+##### **Políticas Departamentais:**
+- **Departamentos Críticos**: IT, Security, Finance com políticas mais restritivas
+- **Departamentos Operacionais**: HR, Marketing com maior flexibilidade
+- **Departamentos Especializados**: Engenharia, Pesquisa com acesso seletivo
+
+##### **Sensibilidade de Recursos:**
+- **Recursos Altamente Sensíveis**: Sistemas financeiros, dados de clientes (baixa aprovação)
+- **Recursos Moderadamente Sensíveis**: Sistemas internos, ferramentas (aprovação média)
+- **Recursos Básicos**: Ferramentas gerais, documentação (alta aprovação)
+
+#### 📈 **Correlação Quantitativa:**
+
+**Matriz de Correlação - Principais Descobertas:**
+- **Correlações baixas a moderadas**: Valores entre -0.3 e +0.3 predominantemente
+- **Ausência de multicolinearidade**: Nenhuma correlação forte (>0.7) entre features
+- **Independência das variáveis**: Cada feature contribui com informação única
+- **Correlação com TARGET**: Todas as features mostram alguma relação com as decisões de acesso
+
+**Features com Maior Poder Preditivo:**
+1. **ROLE_ROLLUP_1/2**: Correlação mais forte com decisões de acesso
+2. **RESOURCE**: Alta variabilidade, indicando forte influência
+3. **ROLE_DEPTNAME**: Padrões departamentais claros
+4. **MGR_ID**: Influência gerencial significativa nas aprovações
+
+#### 🎯 **Implicações para Modelagem:**
+
+##### **Features Mais Importantes:**
+- **ROLE_ROLLUP_1/2**: Base para hierarquia organizacional
+- **RESOURCE**: Crítico para identificar sensibilidade
+- **ROLE_DEPTNAME**: Fundamental para políticas departamentais
+
+##### **Combinações Estratégicas:**
+- **Hierarquia + Departamento**: ROLE_ROLLUP_1 + ROLE_DEPTNAME
+- **Função + Recurso**: ROLE_FAMILY + RESOURCE
+- **Gerente + Departamento**: MGR_ID + ROLE_DEPTNAME
+
+##### **Padrões de Negação:**
+- **5.79% de negações** concentradas em:
+  - Recursos altamente sensíveis
+  - Combinações específicas de hierarquia
+  - Departamentos com políticas restritivas
+  - Solicitações de funcionários específicos
 
 ### 🔧 Qualidade dos Dados
 
 #### ✅ Aspectos Positivos
-- **Valores Ausentes**: 0 (zero) valores ausentes
-- **Duplicatas**: 0 (zero) registros duplicados
-- **Consistência**: Dados estruturados e consistentes
+- **Valores Ausentes**: 0 valores ausentes
+- **Duplicatas**: 0 registros duplicados
 
 #### ⚠️ Desafios Identificados
 - **Valores Raros**: Algumas categorias com frequência muito baixa
 - **Alta Cardinalidade**: Variáveis que necessitam tratamento especial
 - **Complexidade Hierárquica**: Relações complexas entre variáveis organizacionais
+- **Desbalanceamento das Features e da Target**: O desbalanceamento é um aspecto crítico tanto na variável target quanto em várias features do dataset
+
+#### 🚩 Implicações
+- Técnicas de balanceamento (como SMOTE) são necessárias para a target.
+- Para features, é importante agrupar categorias raras ou aplicar encoding apropriado para evitar overfitting e garantir representatividade.
+- Métricas como F1-score e AUC-PR são preferíveis à accuracy para avaliar o desempenho do modelo em cenários desbalanceados.
 
 ## 🛡️ Prevenção de Data Leakage
 
@@ -100,20 +193,6 @@ Desenvolver um modelo de classificação binária que preveja automaticamente de
 ### 🎯 Importância
 O data leakage é uma das principais causas de modelos que performam bem em desenvolvimento mas falham em produção. Nossa abordagem garante resultados confiáveis e generalizáveis.
 
-## 🔮 Hipóteses para Modelagem
-
-### 🏗️ Hipóteses Principais
-1. **Hierarquia Organizacional**: Diferentes níveis hierárquicos influenciam significativamente as decisões de acesso
-2. **Políticas Departamentais**: Departamentos têm políticas de acesso específicas e distintas
-3. **Sensibilidade de Recursos**: Recursos diferentes têm critérios de acesso variados
-4. **Influência Gerencial**: O gerente do funcionário impacta nas decisões de aprovação
-5. **Combinações Funcionais**: Combinações específicas de função e departamento são determinantes
-
-### 🎯 Estratégias de Feature Engineering
-- **Variáveis Derivadas**: Criar features baseadas em combinações hierárquicas
-- **Agrupamentos**: Agrupar categorias raras para reduzir overfitting
-- **Encoding Avançado**: Implementar técnicas específicas para alta cardinalidade
-
 ## 📁 Estrutura do Projeto
 
 ```
@@ -123,37 +202,11 @@ employee-access-predictor/
 │   ├── train.csv          # Dataset de treinamento
 │   └── test.csv           # Dataset de teste (isolado)
 │
-├── 📓 projeto.ipynb       # Análise exploratória (CRISP-DM Fase 2)
-│
-├── 📋 Documentos/
-│   ├── crisp-dm-phase-2.png
-│   └── exercicio_crisp_dm_phase_2.pdf
+├── 📓 projeto.ipynb       # Análise exploratória (CRISP-DM)
 │
 ├── 📖 README.md           # Este arquivo
 └── 📄 LICENSE
 ```
-
-## 🚀 Próximos Passos
-
-### 🎯 CRISP-DM Fase 3: Data Preparation
-- [ ] Limpeza e pré-processamento dos dados
-- [ ] Tratamento de valores raros e alta cardinalidade
-- [ ] Feature engineering baseado nos insights descobertos
-- [ ] Encoding de variáveis categóricas
-- [ ] Divisão estratificada para validação
-
-### 🤖 CRISP-DM Fase 4: Modeling
-- [ ] Seleção de algoritmos candidatos
-- [ ] Implementação de baseline simples
-- [ ] Modelos avançados (ensemble, deep learning)
-- [ ] Otimização de hiperparâmetros
-- [ ] Validação cruzada rigorosa
-
-### 📈 CRISP-DM Fase 5: Evaluation
-- [ ] Métricas de classificação (accuracy, precision, recall, F1-score)
-- [ ] Análise de curva ROC e AUC
-- [ ] Interpretabilidade do modelo
-- [ ] Validação no dataset de teste
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -173,9 +226,12 @@ employee-access-predictor/
 
 ## 👥 Equipe
 
-**Equipe 2** - Disciplina de Aprendizado de Máquina
-- Universidade Federal de Pernambuco (UFPE)
-- 4º Período
+**Equipe 2**
+- Ana Livia da Costa Pessoa [alcp]
+- Eduardo Henrique da Silva Santana [ehss]
+- Emanuel Salgado Pedroza [esp]
+- Fernanda Marques Neves [fmn]
+- Sara Carvalho Coelho Lustosa [sccl]
 
 ## 📊 Metodologia
 
@@ -218,6 +274,6 @@ A análise exploratória dos dados foi finalizada com sucesso, revelando insight
 
 ---
 
-**📅 Última Atualização**: Julho 2025  
-**🎓 Disciplina**: Aprendizado de Máquina - UFPE  
+**📅 Última Atualização**: Julho 2025 
+**🎓 Disciplina**: Aprendizado de Máquina - UFPE
 **👨‍🎓 Período**: 4º Período
