@@ -3,11 +3,11 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-orange.svg)](https://jupyter.org/)
 [![CRISP-DM](https://img.shields.io/badge/Methodology-CRISP--DM-green.svg)](https://en.wikipedia.org/wiki/Cross-industry_standard_process_for_data_mining)
-[![Status](https://img.shields.io/badge/Status-Phase%202%20Complete-success.svg)](.)
+[![Status](https://img.shields.io/badge/Status-Phase%204%20In%20Progress-orange.svg)](.)
 
 ## 📋 Visão Geral
 
-Este projeto implementa um modelo preditivo para determinar se um funcionário da Amazon deve ou não ter acesso a determinados recursos organizacionais. Utilizando a metodologia **CRISP-DM**, o projeto está atualmente na **Fase 2: Data Understanding (Compreensão dos Dados)**.
+Este projeto implementa um modelo preditivo para determinar se um funcionário da Amazon deve ou não ter acesso a determinados recursos organizacionais. Utilizando a metodologia **CRISP-DM**, o projeto está atualmente na **Fase 4: Modeling (Modelagem)**, com as fases anteriores concluídas com sucesso.
 
 ### 🎯 Objetivo Principal
 Desenvolver um modelo de classificação binária que preveja automaticamente decisões de acesso a recursos, otimizando processos de segurança e governança corporativa.
@@ -165,6 +165,61 @@ A análise bivariada revelou padrões importantes na relação entre as variáve
   - Departamentos com políticas restritivas
   - Solicitações de funcionários específicos
 
+## 🤖 Modelos Implementados e Resultados
+
+### 🔧 Estratégia de Pré-processamento
+
+Para lidar com as características específicas do dataset, foi implementada uma estratégia de pré-processamento diferenciada:
+
+#### **Tratamento por Cardinalidade:**
+- **Baixa Cardinalidade** (<450 categorias): **OneHotEncoder**
+  - Features: ROLE_ROLLUP_2, ROLE_DEPTNAME, ROLE_TITLE, ROLE_CODE
+  - Parâmetros: min_frequency=0.01, drop='if_binary'
+  
+- **Alta Cardinalidade** (≥450 categorias): **TargetEncoder**
+  - Features: MGR_ID, ROLE_FAMILY_DESC, RESOURCE
+  - Parâmetros: smoothing=1.0, min_samples_leaf=20
+
+#### **Feature Selection:**
+- **Removidas**: ROLE_ROLLUP_1, ROLE_FAMILY (baixa correlação com target)
+- **Resultado**: Redução de 9 para 7 features preditoras
+
+### 🏆 Modelos Avaliados
+
+#### **1. Algoritmos Tradicionais (Scikit-learn)**
+- **K-Nearest Neighbors (K-NN)**
+- **Árvore de Decisão**
+- **Random Forest**
+- **Support Vector Machine (SVM)**
+
+#### **2. Algoritmo Personalizado**
+- **Learning Vector Quantization (LVQ)**: Implementação própria
+  - Parâmetros: 20 codebooks, learning rate 0.3, 100 épocas
+  - **Resultado**: 94.21% de acurácia (validação cruzada 5-fold)
+
+### 📊 Pipeline de Avaliação
+
+#### **Validação Cruzada Estratificada:**
+- **10-fold cross-validation** para manter proporção das classes
+- **Métricas avaliadas**: ROC-AUC, Precision, Recall por classe
+
+#### **Otimização de Hiperparâmetros:**
+- **RandomizedSearchCV** com 30 iterações
+- **Foco em ROC-AUC** como métrica principal
+- **Avaliação final** no conjunto de teste isolado
+
+### 🎯 Resultados Preliminares
+
+#### **LVQ (Implementação Própria):**
+- ✅ **Acurácia**: 94.21% ± 0.18%
+- ✅ **Consistência**: Alta estabilidade entre folds
+- ✅ **Baseline**: Superior ao baseline ingênuo (94.21%)
+
+#### **Modelos Tradicionais:**
+- 🔄 **Otimização**: Em andamento com RandomizedSearchCV
+- 🔄 **Avaliação**: Comparação completa em desenvolvimento
+- 🔄 **Ensemble**: Análise de combinação de modelos planejada
+
 ### 🔧 Qualidade dos Dados
 
 #### ✅ Aspectos Positivos
@@ -202,7 +257,7 @@ employee-access-predictor/
 │   ├── train.csv          # Dataset de treinamento
 │   └── test.csv           # Dataset de teste (isolado)
 │
-├── 📓 projeto.ipynb       # Análise exploratória (CRISP-DM)
+├── 📓 projeto.ipynb       # Análise completa (CRISP-DM Fases 1-4)
 │
 ├── 📖 README.md           # Este arquivo
 └── 📄 LICENSE
@@ -217,8 +272,15 @@ employee-access-predictor/
 - **Matplotlib/Seaborn**: Visualização
 
 ### 🤖 Machine Learning
-- **Scikit-learn**: Algoritmos de ML
+- **Scikit-learn**: Algoritmos de ML e pipelines
+- **Category Encoders**: Encoding para variáveis categóricas
 - **Scipy**: Análises estatísticas
+
+### 🔧 Pré-processamento
+- **StandardScaler**: Normalização de dados
+- **OneHotEncoder**: Encoding para baixa cardinalidade
+- **TargetEncoder**: Encoding para alta cardinalidade
+- **PCA**: Análise de componentes principais
 
 ### 📓 Ambiente de Desenvolvimento
 - **Jupyter Notebook**: Análise interativa
@@ -238,10 +300,10 @@ employee-access-predictor/
 Este projeto segue rigorosamente a metodologia **CRISP-DM** (Cross Industry Standard Process for Data Mining):
 
 1. ✅ **Business Understanding** - Compreensão do problema
-2. ✅ **Data Understanding** - Análise exploratória (FASE ATUAL)
-3. 🔄 **Data Preparation** - Pré-processamento
-4. 🔄 **Modeling** - Desenvolvimento do modelo
-5. 🔄 **Evaluation** - Avaliação
+2. ✅ **Data Understanding** - Análise exploratória
+3. ✅ **Data Preparation** - Pré-processamento e engenharia de features
+4. 🔄 **Modeling** - Desenvolvimento e avaliação de modelos (FASE ATUAL)
+5. 🔄 **Evaluation** - Avaliação final
 6. 🔄 **Deployment** - Implementação
 
 ## 📈 Métricas de Sucesso
@@ -254,9 +316,9 @@ Este projeto segue rigorosamente a metodologia **CRISP-DM** (Cross Industry Stan
 - **AUC-ROC**: > 0.90
 
 ### 🏢 Métricas de Negócio
-- **Redução de Processos Manuais**: 70%+
-- **Tempo de Decisão**: < 1 segundo
-- **Consistência**: 95%+ das decisões automatizadas
+- **Redução de Processos Manuais**: 70%+ (objetivo)
+- **Tempo de Decisão**: < 1 segundo (objetivo)
+- **Consistência**: 95%+ das decisões automatizadas (objetivo)
 
 ## 📄 Licença
 
@@ -264,13 +326,41 @@ Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICEN
 
 ## 🔍 Status do Projeto
 
-**CRISP-DM Fase 2 - CONCLUÍDA** ✅
+**CRISP-DM Fase 4 - EM ANDAMENTO** 🔄
 
-A análise exploratória dos dados foi finalizada com sucesso, revelando insights importantes sobre:
-- Estrutura organizacional da Amazon
-- Padrões de acesso baseados em hierarquia
-- Desafios de modelagem (alta cardinalidade, valores raros)
-- Estratégias para as próximas fases
+### ✅ **Fases Concluídas:**
+
+#### **Fase 1: Business Understanding**
+- Definição clara do problema de classificação binária
+- Identificação dos objetivos de negócio
+- Compreensão do contexto de controle de acesso
+
+#### **Fase 2: Data Understanding**
+- Análise exploratória completa revelando:
+  - Dataset extremamente desbalanceado (94.21% vs 5.79%)
+  - 9 variáveis categóricas com cardinalidades variadas
+  - Padrões organizacionais complexos na Amazon
+  - Necessidade de estratégias específicas para balanceamento
+
+#### **Fase 3: Data Preparation**
+- Estratégia de encoding diferenciada por cardinalidade
+- Feature selection baseada em importância
+- Pipeline de pré-processamento robusto
+- Prevenção de data leakage com isolamento de teste
+
+###  🔄 **Fase 4 (Atual): Modeling**
+
+#### **Progresso Atual:**
+- ✅ **Pipeline Framework**: Sistema de avaliação padronizado
+- 🔄 **Hyperparameter Tuning**: Otimização em andamento para modelos tradicionais
+- 🔄 **Model Comparison**: Análise comparativa completa
+- 🔄 **Ensemble Methods**: Exploração de combinações de modelos
+- 🔄 **Ccurvas ROC**: Análises comparativas
+
+#### **Próximos Passos:**
+- Finalização da otimização de hiperparâmetros
+- Avaliação final no conjunto de teste
+- Seleção do melhor modelo baseado em múltiplas métricas
 
 ---
 
